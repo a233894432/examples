@@ -1,35 +1,39 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/kataras/iris"
+	"gopkg.in/kataras/iris.v6"
+	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
 )
 
 func main() {
+	app := iris.New()
+	// output startup banner and error logs on os.Stdout
+	app.Adapt(iris.DevLogger())
+	// set the router, you can choose gorillamux too
+	app.Adapt(httprouter.New())
 
 	// register global middleware, you can pass more than one handler comma separated
-	iris.UseFunc(func(c *iris.Context) {
-		fmt.Printf("(1)Global logger: %s\n", c.PathString())
-		c.Next()
+	app.UseFunc(func(ctx *iris.Context) {
+		println("(1)Global logger path: " + ctx.Path())
+		ctx.Next()
 	})
 
 	// register a global structed iris.Handler as middleware
 	myglobal := MyGlobalMiddlewareStructed{loggerId: "my logger id"}
-	iris.Use(myglobal)
+	app.Use(myglobal)
 
 	// register route's middleware
-	iris.Get("/home", func(c *iris.Context) {
-		fmt.Println("(1)HOME logger for /home")
-		c.Next()
-	}, func(c *iris.Context) {
-		fmt.Println("(2)HOME logger for /home")
-		c.Next()
-	}, func(c *iris.Context) {
-		c.Write("Hello from /home")
+	app.Get("/home", func(ctx *iris.Context) {
+		println("(1)HOME logger for /home")
+		ctx.Next()
+	}, func(ctx *iris.Context) {
+		println("(2)HOME logger for /home")
+		ctx.Next()
+	}, func(ctx *iris.Context) {
+		ctx.Writef("Hello from /home")
 	})
 
-	iris.Listen(":8080")
+	app.Listen(":8080")
 }
 
 // a silly example
@@ -37,10 +41,8 @@ type MyGlobalMiddlewareStructed struct {
 	loggerId string
 }
 
-var _ iris.Handler = &MyGlobalMiddlewareStructed{}
-
 //Important staff, iris middleware must implement the iris.Handler interface which is:
-func (m MyGlobalMiddlewareStructed) Serve(c *iris.Context) {
-	fmt.Println("Hello from the MyGlobalMiddlewareStructed")
-	c.Next()
+func (m MyGlobalMiddlewareStructed) Serve(ctx *iris.Context) {
+	println("Hello from the MyGlobalMiddlewareStructed")
+	ctx.Next()
 }

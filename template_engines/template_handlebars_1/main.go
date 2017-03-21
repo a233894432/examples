@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/aymerick/raymond"
 	"github.com/kataras/go-template/handlebars"
-	"github.com/kataras/iris"
+	"gopkg.in/kataras/iris.v6"
 )
 
 type mypage struct {
@@ -31,7 +31,7 @@ func main() {
 	// remove the layout for a specific route using iris.NoLayout
 	iris.Get("/nolayout", func(ctx *iris.Context) {
 		if err := ctx.Render("home.html", nil, iris.RenderOptions{"layout": iris.NoLayout}); err != nil {
-			ctx.Write(err.Error())
+			ctx.Writef(err.Error())
 		}
 	})
 

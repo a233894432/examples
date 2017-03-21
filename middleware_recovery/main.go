@@ -1,27 +1,32 @@
 package main
 
 import (
-	"github.com/iris-contrib/middleware/recovery"
-	"github.com/kataras/iris"
+	"gopkg.in/kataras/iris.v6"
+	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
+	"gopkg.in/kataras/iris.v6/middleware/recover"
 )
 
 func main() {
-	//iris.Use(recovery.New(os.Stdout)) // this is an optional parameter, you can skip it, the default is os.Stderr
-	iris.Use(recovery.New())
+	app := iris.New()
+	// output startup banner and error logs on os.Stdout
+	app.Adapt(iris.DevLogger())
+	// set the router, you can choose gorillamux too
+	app.Adapt(httprouter.New())
+
+	app.Use(recover.New())
 	i := 0
-	iris.Get("/", func(ctx *iris.Context) {
+	app.Get("/", func(ctx *iris.Context) {
 		i++
 		if i%2 == 0 {
 			panic("a panic here")
-			return
-
 		}
 
 		ctx.Next()
 
 	}, func(ctx *iris.Context) {
-		ctx.Write("Hello, refresh one time more to get panic!")
+		ctx.Writef("Hello, refresh one time more to get panic!")
 	})
 
-	iris.Listen(":8080")
+	// open http://localhost:8080, and hit refresh, each two refreshes you'll get a panic follows by recovery
+	app.Listen(":8080")
 }

@@ -1,19 +1,34 @@
 package main
 
-import "github.com/kataras/iris"
+import (
+	"gopkg.in/kataras/iris.v6"
+	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
+)
 
 func main() {
-	iris.Set(iris.OptionDisablePathEscape(true))
-	// accepts parameters with slash '/'
-	// Request: http://localhost:8080/details/Project%2FDelta
+	app := iris.New()
+	// output startup banner and error logs on os.Stdout
+	app.Adapt(iris.DevLogger())
+	// set the router, you can choose gorillamux too
+	app.Adapt(httprouter.New())
+	// NOTE:
+	// if app.Config.EnablePathEscape = true and
+	// Request: http://localhost:8080/details/Project%2FDelta then
+	// it will pass the request
+	// as http://localhost:8080/project/details/Project/Delta
+	// and it will response as NOT FOUND
+	// because iris.Config.EnablePathEscape decodes to query the whole path
+	// before parsing the path parameters.
+
+	// accepts %2F as slash '/' wih ParamDecoded
+	// Request: http://localhost:8080/details/Project%2FDelta then
 	// ctx.Param("project") returns the raw named parameter: Project%2FDelta
-	// which you can escape it manually with net/url: projectName, _ := url.QueryUnescape(c.Param("project"))
-	// With DisablePathEscape = false this will redirect to 404 not found error because of the Project/Delta
-	// Look here: https://github.com/kataras/iris/issues/135
-	iris.Get("/details/:project", func(ctx *iris.Context) {
+	// ctx.ParamDecoded("project") returns Project/Delta
+	app.Get("/details/:project", func(ctx *iris.Context) {
 		projectName := ctx.Param("project")
-		ctx.Write("%s", projectName)
+		projectNameDecoded := ctx.ParamDecoded("project")
+		ctx.Writef("Raw: %s\nDecoded: %s", projectName, projectNameDecoded)
 	})
 
-	iris.Listen(":8080")
+	app.Listen(":8080")
 }

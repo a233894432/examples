@@ -1,39 +1,47 @@
 // Package main same as middleware_2 but with party
 package main
 
-import "github.com/kataras/iris"
+import (
+	"gopkg.in/kataras/iris.v6"
+	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
+)
 
 func firstMiddleware(ctx *iris.Context) {
-	ctx.Write("1. This is the first middleware, before any of route's handlers \n")
+	ctx.Writef("1. This is the first middleware, before any of route's handlers \n")
 	ctx.Next()
 }
 
 func secondMiddleware(ctx *iris.Context) {
-	ctx.Write("2. This is the second middleware, before the / main handler \n")
+	ctx.Writef("2. This is the second middleware, before the / main handler \n")
 	ctx.Next()
 }
 
 func thirdMiddleware(ctx *iris.Context) {
-	ctx.Write("3. This is the 3rd middleware, after the main handler \n")
+	ctx.Writef("3. This is the 3rd middleware, after the main handler \n")
 	ctx.Next()
 }
 
 func lastAlwaysMiddleware(ctx *iris.Context) {
-	ctx.Write("4. This is the ALWAYS LAST Handler \n")
+	ctx.Writef("4. This is the ALWAYS LAST Handler \n")
 }
 
 func main() {
+	app := iris.New()
+	// output startup banner and error logs on os.Stdout
+	app.Adapt(iris.DevLogger())
+	// set the router, you can choose gorillamux too
+	app.Adapt(httprouter.New())
 
 	// with parties:
-	myParty := iris.Party("/myparty", firstMiddleware).DoneFunc(lastAlwaysMiddleware)
+	myParty := app.Party("/myparty", firstMiddleware).DoneFunc(lastAlwaysMiddleware)
 	{
 		myParty.Get("/", secondMiddleware, func(ctx *iris.Context) {
-			ctx.Write("Hello from /myparty/ \n")
+			ctx.Writef("Hello from %s\n", ctx.Path())
 			ctx.Next() // .Next because we 're using the third middleware after that, and lastAlwaysMiddleware also
 		}, thirdMiddleware)
 
 	}
 
-	iris.Listen(":8080")
+	app.Listen(":8080")
 
 }

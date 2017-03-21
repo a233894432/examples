@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/kataras/iris"
+	"gopkg.in/kataras/iris.v6"
 )
 
 func main() {
@@ -41,6 +41,6 @@ func main() {
 }
 
 func emptyHandler(ctx *iris.Context) {
-	ctx.Write("Hello from %s.", ctx.PathString())
+	ctx.Writef("Hello from %s.", ctx.Path())
 
 }

@@ -3,7 +3,7 @@ package main
 
 import (
 	"github.com/kataras/go-template/django"
-	"github.com/kataras/iris"
+	"gopkg.in/kataras/iris.v6"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 }
 
 func emptyHandler(ctx *iris.Context) {
-	ctx.Write("[SUBDOMAIN: %s]Hello from Path: %s.", ctx.Subdomain(), ctx.PathString())
+	ctx.Writef("[SUBDOMAIN: %s]Hello from Path: %s.", ctx.Subdomain(), ctx.Path())
 }
 
 //Note that, you can see more django examples syntax by navigating to https://github.com/flosch/pongo2
